@@ -12,166 +12,64 @@ const LinkSDK = forwardRef((props, ref) => {
 
     // useImperativeHandle allows the methods to be called outside of the component
     useImperativeHandle(ref, () => ({
-        // ALL of these functions **must** have the function passed in as a String
-        // ALL of these functions must set up postMessage function to enable callback
+        // The Link methods rely on an injected window.postMessage targeting the
+        // IFRAME Web application which in turn communicates with the core Link SDK.
+        // The result from the SDK core is finally returned via a call to 
+        // window.ReactNativeWebView.postMessage(JSON.stringify(resultObject))
+        // residing in the IFRAME Web application.
 
         // initialise connect flow
         connect(opts) {
             setIsOpen(true)
-            const keys = Object.keys(opts)
 
-            const call = `
-            function postResponse(status) {
-                status.method = "CONNECT"
-                window.ReactNativeWebView.postMessage(JSON.stringify(status))
-            }
-
-            try {
-                Lean.connect({
-                    ${keys.map((key) => `${key}: ${JSON.stringify(opts[key])}`)},
-                    app_token: "${props.appToken}",
-                    sandbox: ${props.sandbox},
-                    callback: postResponse
-                })
-            } catch (e) {
-                postResponse({ method: "CONNECT", status: "ERROR", message: "Lean not initialized" })
-            }
-            `
-
-            SDK.current.injectJavaScript(call)
+            SDK.current.injectJavaScript(createCall('connect', opts))
         },
 
         // initialise link flow
         link(opts) {
             setIsOpen(true)
-            const keys = Object.keys(opts)
 
-            const call = `
-            function postResponse(status) {
-                status.method = "LINK"
-                window.ReactNativeWebView.postMessage(JSON.stringify(status))
-            }
-
-            try {
-                Lean.link({
-                    ${keys.map((key) => `${key}: ${JSON.stringify(opts[key])}`)},
-                    app_token: "${props.appToken}",
-                    sandbox: ${props.sandbox},
-                    callback: postResponse
-                })
-            } catch (e) {
-                postResponse({ method: "LINK", status: "ERROR", message: "Lean not initialized" })
-            }
-            `
-
-            SDK.current.injectJavaScript(call)
+            SDK.current.injectJavaScript(createCall('link', opts))
         },
 
         // initialise reconnect flow
         reconnect(opts) {
             setIsOpen(true)
-            const keys = Object.keys(opts)
 
-            const call = `
-            function postResponse(status) {
-                status.method = "RECONNECT"
-                window.ReactNativeWebView.postMessage(JSON.stringify(status))
-            }
-
-            try {
-                Lean.reconnect({
-                    ${keys.map((key) => `${key}: ${JSON.stringify(opts[key])}`)},
-                    app_token: "${props.appToken}",
-                    sandbox: ${props.sandbox},
-                    callback: postResponse
-                })
-            } catch (e) {
-                postResponse({ method: "RECONNECT", status: "ERROR", message: "Lean not initialized" })
-            }
-            `
-
-            SDK.current.injectJavaScript(call)
+            SDK.current.injectJavaScript(createCall('reconnect', opts))
         },
 
         // initialise CPS flow
         createPaymentSource(opts) {
             setIsOpen(true)
-            const keys = Object.keys(opts)
 
-            const call = `
-            function postResponse(status) {
-                status.method = "CREATE_PAYMENT_SOURCE"
-                window.ReactNativeWebView.postMessage(JSON.stringify(status))
-            }
-
-            try {
-                Lean.createPaymentSource({
-                    ${keys.map((key) => `${key}: ${JSON.stringify(opts[key])}`)},
-                    app_token: "${props.appToken}",
-                    sandbox: ${props.sandbox},
-                    callback: postResponse
-                })
-            } catch (e) {
-                postResponse({ method: "CREATE_PAYMENT_SOURCE", status: "ERROR", message: "Lean not initialized" })
-            }
-            `
-            SDK.current.injectJavaScript(call)
+            SDK.current.injectJavaScript(createCall('createPaymentSource', opts))
         },
 
         // initialise pay flow
         pay(opts) {
             setIsOpen(true)
-            const keys = Object.keys(opts)
 
-            const call = `
-            function postResponse(status) {
-                status.method = "PAY"
-                window.ReactNativeWebView.postMessage(JSON.stringify(status))
-            }
-
-            try {
-                Lean.pay({
-                    ${keys.map((key) => `${key}: ${JSON.stringify(opts[key])}`)},
-                    app_token: "${props.appToken}",
-                    sandbox: ${props.sandbox},
-                    callback: postResponse
-                })
-            } catch (e) {
-                postResponse({ method: "PAY", status: "ERROR", message: "Lean not initialized" })
-            }
-            `
-
-            SDK.current.injectJavaScript(call)
+            SDK.current.injectJavaScript(createCall('pay', opts))
         },
 
         // updatePaymentSource flow
         updatePaymentSource(opts) {
             setIsOpen(true)
-            const keys = Object.keys(opts)
 
-            const call = `
-            function postResponse(status) {
-                status.method = "UPDATE_PAYMENT_SOURCE"
-                window.ReactNativeWebView.postMessage(JSON.stringify(status))
-            }
-
-            try {
-                Lean.updatePaymentSource({
-                    ${keys.map((key) => `${key}: ${JSON.stringify(opts[key])}`)},
-                    app_token: "${props.appToken}",
-                    sandbox: ${props.sandbox},
-                    callback: postResponse
-                })
-            } catch (e) {
-                postResponse({ method: "UPDATE_PAYMENT_SOURCE", status: "ERROR", message: "Lean not initialized" })
-            }
-            `
-
-            SDK.current.injectJavaScript(call)
+            SDK.current.injectJavaScript(createCall('updatePaymentSource', opts))
         }
     }));
 
-    // The callback fired internally by the SDK to propagate to the user supplied callback and close the webview.
+    const createCall = (method, opts) => {
+        let call = `window.postMessage({lean$m:'${method}',argument:\
+${JSON.stringify({ ...opts, ...{app_token: props.appToken,sandbox: props.sandbox}})}}, '*');true;`;
+//        console.log('call\n' + call);
+        return call;
+    }
+
+    // The callback fired internally by the SDK to propagate to the user supplied 
+    // callback and close the webview.
     const internalCallback = (data) => {
         setTimeout(() => setIsOpen(false), 300)
         if (props.callback) {
@@ -190,7 +88,11 @@ const LinkSDK = forwardRef((props, ref) => {
                 ref={SDK}
                 style={styles.WebView}
                 originWhitelist={['*']}
-                source={{ baseUrl: "https://leantech.me", html: require('./base.js')(props.version) }}
+//////////////////////////////////////////////////////
+// Update HERE to suite the final hosting solution! //
+//////////////////////////////////////////////////////
+                source={{ uri: 'https://leananders.github.io/clientsdk/' + 
+                         (props.version ? props.version : 'latest') + '/websdk.html' }}
                 onShouldStartLoadWithRequest={event => {
                     if (event.url !== "https://leantech.me/") {
                         console.log("hello --------------", event.url)
