@@ -38,14 +38,14 @@ const LinkSDK = forwardRef((props, ref) => {
             createCall('createPaymentSource', opts)
         },
 
-        // initialise pay flow
-        pay(opts) {
-            createCall('pay', opts)
-        },
-
         // updatePaymentSource flow
         updatePaymentSource(opts) {
             createCall('updatePaymentSource', opts)
+        },
+
+        // initialise pay flow
+        pay(opts) {
+            createCall('pay', opts)
         }
     }));
 
