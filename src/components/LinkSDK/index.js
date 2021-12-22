@@ -93,7 +93,7 @@ ${JSON.stringify({ ...opts, ...{app_token: props.appToken,sandbox: props.sandbox
                     Linking.openURL(event.url)
                     return false
                 }}
-                onMessage={(event)=>{
+                onMessage={(event)=> {
                     internalCallback(event.nativeEvent.data);
                 }}
             />
@@ -102,7 +102,7 @@ ${JSON.stringify({ ...opts, ...{app_token: props.appToken,sandbox: props.sandbox
 })
 
 LinkSDK.defaultProps = {
-  webViewProps: {}
+    webViewProps: {}
 }
 
 const styles = StyleSheet.create({
@@ -125,14 +125,14 @@ const styles = StyleSheet.create({
         zIndex: 2
     },
     WebView: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',  
-      backgroundColor: 'transparent',
-      zIndex: 100
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',  
+        backgroundColor: 'transparent',
+        zIndex: 100
     },
-  });
+});
 
 export default LinkSDK;
