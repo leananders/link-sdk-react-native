@@ -106,8 +106,12 @@ const App = () => {
         ref={Lean}
         appToken={appToken}
         callback={(data) => console.log("DATA SENT TO CALLBACK:", data)}
+
+        // sandbox={true}
+
+// For internal testing...
         // version="1.0.0"
-        // sandbox
+        // hostpath="https://testhost/path/"
       />
     </View>
   );

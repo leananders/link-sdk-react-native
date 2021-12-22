@@ -12,60 +12,49 @@ const LinkSDK = forwardRef((props, ref) => {
 
     // useImperativeHandle allows the methods to be called outside of the component
     useImperativeHandle(ref, () => ({
-        // The Link methods rely on an injected window.postMessage targeting the
-        // IFRAME Web application which in turn communicates with the core Link SDK.
+        // The Link methods rely on an injected window.postMessage targeting
+        // a Web application which in turn communicates with the core Link SDK.
         // The result from the SDK core is finally returned via a call to 
         // window.ReactNativeWebView.postMessage(JSON.stringify(resultObject))
-        // residing in the IFRAME Web application.
+        // residing in the Web application.
 
         // initialise connect flow
         connect(opts) {
-            setIsOpen(true)
-
-            SDK.current.injectJavaScript(createCall('connect', opts))
+            createCall('connect', opts)
         },
 
         // initialise link flow
         link(opts) {
-            setIsOpen(true)
-
-            SDK.current.injectJavaScript(createCall('link', opts))
+            createCall('link', opts)
         },
 
         // initialise reconnect flow
         reconnect(opts) {
-            setIsOpen(true)
-
-            SDK.current.injectJavaScript(createCall('reconnect', opts))
+            createCall('reconnect', opts)
         },
 
         // initialise CPS flow
         createPaymentSource(opts) {
-            setIsOpen(true)
-
-            SDK.current.injectJavaScript(createCall('createPaymentSource', opts))
+            createCall('createPaymentSource', opts)
         },
 
         // initialise pay flow
         pay(opts) {
-            setIsOpen(true)
-
-            SDK.current.injectJavaScript(createCall('pay', opts))
+            createCall('pay', opts)
         },
 
         // updatePaymentSource flow
         updatePaymentSource(opts) {
-            setIsOpen(true)
-
-            SDK.current.injectJavaScript(createCall('updatePaymentSource', opts))
+            createCall('updatePaymentSource', opts)
         }
     }));
 
     const createCall = (method, opts) => {
+        setIsOpen(true)
         let call = `window.postMessage({lean$m:'${method}',argument:\
 ${JSON.stringify({ ...opts, ...{app_token: props.appToken,sandbox: props.sandbox}})}}, '*');true;`;
 //        console.log('call\n' + call);
-        return call;
+        SDK.current.injectJavaScript(call);
     }
 
     // The callback fired internally by the SDK to propagate to the user supplied 
@@ -76,6 +65,12 @@ ${JSON.stringify({ ...opts, ...{app_token: props.appToken,sandbox: props.sandbox
             props.callback(JSON.parse(data))
         }
     }
+
+    //////////////////////////////////////////////////////
+    // Update HERE to suite the final hosting solution! //
+    //////////////////////////////////////////////////////
+    const hostpath = props.hostpath ?
+                     props.hostpath : 'https://leananders.github.io/clientsdk/'; 
 
     return (
         <View
@@ -88,20 +83,16 @@ ${JSON.stringify({ ...opts, ...{app_token: props.appToken,sandbox: props.sandbox
                 ref={SDK}
                 style={styles.WebView}
                 originWhitelist={['*']}
-//////////////////////////////////////////////////////
-// Update HERE to suite the final hosting solution! //
-//////////////////////////////////////////////////////
-                source={{ uri: 'https://leananders.github.io/clientsdk/' + 
+                source={{ uri: hostpath + 
                          (props.version ? props.version : 'latest') + '/websdk.html' }}
                 onShouldStartLoadWithRequest={event => {
-                    if (event.url !== "https://leantech.me/") {
-                        console.log("hello --------------", event.url)
-                        Linking.openURL(event.url)
-                        return false
+                    if (event.url.startsWith(hostpath) || event.url == "about:srcdoc") {
+                        return true
                     }
-                    return true
+                    console.log("hello --------------", event.url)
+                    Linking.openURL(event.url)
+                    return false
                 }}
-                javaScriptEnabledAndroid={true}
                 onMessage={(event)=>{
                     internalCallback(event.nativeEvent.data);
                 }}
@@ -144,4 +135,4 @@ const styles = StyleSheet.create({
     },
   });
 
-export default LinkSDK
+export default LinkSDK;
