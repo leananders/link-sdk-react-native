@@ -18,14 +18,14 @@ const LinkSDK = forwardRef((props, ref) => {
         // window.ReactNativeWebView.postMessage(JSON.stringify(resultObject))
         // residing in the Web application.
 
-        // initialise connect flow
-        connect(opts) {
-            createCall('connect', opts)
-        },
-
         // initialise link flow
         link(opts) {
             createCall('link', opts)
+        },
+
+        // initialise connect flow
+        connect(opts) {
+            createCall('connect', opts)
         },
 
         // initialise reconnect flow
